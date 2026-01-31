@@ -1,0 +1,19 @@
+### Upload Medical Image
+POST http://localhost:8000/api/v1/documents/upload/
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="case_id"
+
+<case-uuid-here>
+------WebKitFormBoundary
+Content-Disposition: form-data; name="kind"
+
+medical_image
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="mri.png"
+Content-Type: image/png
+
+< ./test-images/mri.png
+------WebKitFormBoundary--

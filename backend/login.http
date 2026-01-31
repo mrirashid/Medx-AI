@@ -1,0 +1,37 @@
+
+login as admin to get token
+#######################################
+POST http://127.0.0.1:8000/api/login/
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "123456"
+}
+############################################
+login as doctor to get token
+#######################################
+
+POST http://127.0.0.1:8000/api/login/
+Content-Type: application/json
+
+{
+    "email": "doctor1@example.com",
+    "password": "123456"
+}
+############################################
+
+login as nurse to get token
+#######################################
+
+POST http://127.0.0.1:8000/api/login/
+Content-Type: application/json
+
+{
+    "email": "nurse1@example.com",
+    "password": "123456"
+}
+############################################
+
+GET  http://127.0.0.1:8000/api/me/
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE

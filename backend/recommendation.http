@@ -1,0 +1,153 @@
+### Variables
+@baseUrl = http://localhost:8000/api/v1
+@token = your-jwt-token-here
+@caseId = your-case-uuid
+@predictionId = your-prediction-uuid
+@recommendationId = your-recommendation-uuid
+
+### ============================================
+### 1. GENERATE NEW RECOMMENDATION
+### ============================================
+POST {{baseUrl}}/cases/{{caseId}}/recommendations/generate/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "prediction_id": "{{predictionId}}",
+  "clinical_notes": "Patient presents with stage II breast cancer. Family history positive for BRCA1 mutation.",
+  "history_document_ids": ["doc-uuid-1", "doc-uuid-2"]
+}
+
+### ============================================
+### 2. LIST ALL RECOMMENDATIONS FOR CASE
+### ============================================
+GET {{baseUrl}}/cases/{{caseId}}/recommendations/
+Authorization: Bearer {{token}}
+
+### ============================================
+### 3. GET SINGLE RECOMMENDATION
+### ============================================
+GET {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/
+Authorization: Bearer {{token}}
+
+### ============================================
+### 4. UPDATE STATUS - SAVE (RECOMMENDED WAY)
+### Using parameter instead of separate endpoint
+### ============================================
+PATCH {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/update-status/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "saved"
+}
+
+### ============================================
+### 5. UPDATE STATUS - DISCARD (RECOMMENDED WAY)
+### Using parameter instead of separate endpoint
+### ============================================
+PATCH {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/update-status/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "discarded"
+}
+
+### ============================================
+### 6. UPDATE STATUS - BACK TO DRAFT
+### ============================================
+PATCH {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/update-status/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "draft"
+}
+
+### ============================================
+### 7. DELETE RECOMMENDATION (PERMANENT)
+### Hard delete from database
+### ============================================
+DELETE {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/delete/
+Authorization: Bearer {{token}}
+
+### ============================================
+### LEGACY ENDPOINTS (Still work but use update-status instead)
+### ============================================
+
+### Old way: Save
+POST {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/save/
+Authorization: Bearer {{token}}
+
+### Old way: Discard
+POST {{baseUrl}}/cases/{{caseId}}/recommendations/{{recommendationId}}/discard/
+Authorization: Bearer {{token}}
+
+### ============================================
+### COMPLETE WORKFLOW EXAMPLE
+### ============================================
+
+### Step 1: Generate recommendation
+# POST {{baseUrl}}/cases/abc-123/recommendations/generate/
+# {
+#   "prediction_id": "pred-456",
+#   "clinical_notes": "Initial assessment"
+# }
+# Response: 201 Created
+# {
+#   "recommendation": {
+#     "id": "rec-789",
+#     "status": "draft",
+#     ...
+#   }
+# }
+
+### Step 2: Doctor reviews and approves
+# PATCH {{baseUrl}}/cases/abc-123/recommendations/rec-789/update-status/
+# { "status": "saved" }
+# Response: 200 OK
+# {
+#   "recommendation": { "id": "rec-789", "status": "saved", ... },
+#   "message": "Recommendation saved successfully"
+# }
+
+### Alternative Step 2: Doctor rejects
+# PATCH {{baseUrl}}/cases/abc-123/recommendations/rec-789/update-status/
+# { "status": "discarded" }
+# Response: 200 OK
+# {
+#   "recommendation": { "id": "rec-789", "status": "discarded", ... },
+#   "message": "Recommendation discarded successfully"
+# }
+
+### Step 3: Generate new recommendation (after discard)
+# POST {{baseUrl}}/cases/abc-123/recommendations/generate/
+# {
+#   "prediction_id": "pred-456",
+#   "clinical_notes": "Updated clinical notes with new findings"
+# }
+# Creates NEW recommendation (rec-999) with status="draft"
+
+### Step 4: Delete old discarded recommendation permanently
+# DELETE {{baseUrl}}/cases/abc-123/recommendations/rec-789/delete/
+# Response: 204 No Content
+
+### ============================================
+### COMPARISON: Old vs New Approach
+### ============================================
+
+### ❌ OLD WAY (Multiple endpoints)
+# POST /recommendations/{id}/save/
+# POST /recommendations/{id}/discard/
+
+### ✅ NEW WAY (One endpoint with parameter)
+# PATCH /recommendations/{id}/update-status/ { "status": "saved" }
+# PATCH /recommendations/{id}/update-status/ { "status": "discarded" }
+
+### Benefits:
+# 1. Single endpoint for all status changes
+# 2. More RESTful (PATCH for partial updates)
+# 3. Easier to extend (add new statuses without new endpoints)
+# 4. Clear parameter validation
+# 5. Better for frontend state management
